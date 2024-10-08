@@ -1,12 +1,30 @@
 # Week 7
+
+# Tabla de Contenidos
+
+1. [Relaciones en JPA](#relaciones-en-jpa)
+    - [One-to-One](#one-to-one)
+    - [One-to-Many/Many-to-One](#one-to-many--many-to-one)
+    - [Many-to-Many](#many-to-many)
+    - [Command Line Runner](#implementación-de-un-commandlinerunner)
+    - [Eager y Lazy Fetching](#eager-y-lazy-fetching)
+        - [Eager Fetching](#eager-fetching)
+        - [Lazy Fetching](#lazy-fetching)
+    - [Uso de CascadeType](#uso-de-cascadetype)
+    - [Command Line Runner](#implementación-en-el-commandlinerunner-con-lazy-y-eager-loading)
+2. [Ejercicio práctico](#ejercicio-ampliando-la-aplicación-de-pizzería-con-nuevas-relaciones)
+
 ## Relaciones en JPA
 
 ### One-to-One
+
 - Esta relación se utiliza cuando una entidad está asociada con una sola instancia de otra entidad.
-- **Ejemplo en la app de Pizzería:** Una **Pizzería** tiene un **localManager** (un **Empleado**), y un **Empleado** gestiona una sola **Pizzería**.
+- **Ejemplo en la app de Pizzería:** Una **Pizzería** tiene un **localManager** (un **Empleado**), y un **Empleado**
+  gestiona una sola **Pizzería**.
 
 ```java
-@Entity 
+
+@Entity
 // Lombok annotation for getters, setters, etc.
 public class Pizzeria {
     @Id
@@ -35,10 +53,14 @@ public class Employee {
 ```
 
 ### One-to-Many / Many-to-One
-- Estas relaciones se utilizan cuando una entidad está asociada con múltiples instancias de otra entidad, y la entidad relacionada conoce a su "padre".
-- **Ejemplo en la app de Pizzería:** Una **Pizzería** tiene múltiples **Órdenes**, pero una **Orden** está relacionada con una sola **Pizzería**.
+
+- Estas relaciones se utilizan cuando una entidad está asociada con múltiples instancias de otra entidad, y la entidad
+  relacionada conoce a su "padre".
+- **Ejemplo en la app de Pizzería:** Una **Pizzería** tiene múltiples **Órdenes**, pero una **Orden** está relacionada
+  con una sola **Pizzería**.
 
 ```java
+
 @Entity
 public class Pizzeria {
     @Id
@@ -64,10 +86,14 @@ public class Order {
 ```
 
 ### Many-to-Many
-- Estas relaciones son usadas cuando varias instancias de una entidad están asociadas con varias instancias de otra entidad.
-- **Ejemplo en la app de Pizzería:** Una **Orden** puede tener varias **Pizzas**, y una **Pizza** puede estar en varias **Órdenes**.
+
+- Estas relaciones son usadas cuando varias instancias de una entidad están asociadas con varias instancias de otra
+  entidad.
+- **Ejemplo en la app de Pizzería:** Una **Orden** puede tener varias **Pizzas**, y una **Pizza** puede estar en varias
+  **Órdenes**.
 
 ```java
+
 @Entity
 public class Pizza {
     @Id
@@ -88,11 +114,11 @@ public class Order {
 
     @ManyToMany
     @JoinTable(
-        name = "order_pizza",
-        joinColumns = @JoinColumn(name = "order_id"),
-        inverseJoinColumns = @JoinColumn(name = "pizza_id")
+            name = "order_pizza",
+            joinColumns = @JoinColumn(name = "order_id"),
+            inverseJoinColumns = @JoinColumn(name = "pizza_id")
     )
-    private List<Pizza> pizzas = new ArrayList<>();
+    private final List<Pizza> pizzas = new ArrayList<>();
 }
 ```
 
@@ -101,6 +127,7 @@ public class Order {
 En el siguiente ejemplo, implementamos un `CommandLineRunner` para poblar y probar las relaciones.
 
 ```java
+
 @Component
 public class PizzeriaCommandLineRunner implements CommandLineRunner {
 
@@ -161,47 +188,62 @@ public class PizzeriaCommandLineRunner implements CommandLineRunner {
 
 ```
 
-
 ### Eager y Lazy Fetching
 
 #### **Eager Fetching:**
-- En **Eager Loading** o carga temprana/ansiosa, cuando una entidad se carga, todas las entidades relacionadas también se cargan inmediatamente. Esto es útil cuando sabemos que siempre vamos a necesitar la información relacionada, pero puede afectar el rendimiento si hay muchas relaciones o grandes volúmenes de datos.
-- **Ejemplo:** Si queremos cargar siempre el **localManager** (el empleado encargado de la pizzería) junto con la **Pizzería**, podemos usar **Eager Fetching**.
+
+- En **Eager Loading** o carga temprana/ansiosa, cuando una entidad se carga, todas las entidades relacionadas también
+  se cargan inmediatamente. Esto es útil cuando sabemos que siempre vamos a necesitar la información relacionada, pero
+  puede afectar el rendimiento si hay muchas relaciones o grandes volúmenes de datos.
+- **Ejemplo:** Si queremos cargar siempre el **localManager** (el empleado encargado de la pizzería) junto con la *
+  *Pizzería**, podemos usar **Eager Fetching**.
 - `OneToOne` y `ManyToOne` tienen, por defecto, la estrategia de **carga temprana**
 
 ```java
+
 @OneToOne(fetch = FetchType.EAGER, cascade = CascadeType.ALL)
 @JoinColumn(name = "local_manager_id", referencedColumnName = "id")
 private Employee localManager;
 ```
 
-En este caso, cada vez que carguemos una **Pizzería**, su **localManager** también se cargará inmediatamente, sin importar si lo necesitamos o no.
+En este caso, cada vez que carguemos una **Pizzería**, su **localManager** también se cargará inmediatamente, sin
+importar si lo necesitamos o no.
 
 #### **Lazy Fetching:**
-- En **Lazy Loading** carga diferida/perezosa, las entidades relacionadas no se cargan inmediatamente, sino cuando se accede a ellas por primera vez. Esto es útil cuando no siempre necesitamos cargar los datos relacionados, lo que mejora el rendimiento.
-- **Ejemplo:** Si no queremos cargar todas las **Órdenes** asociadas con una **Pizzería** de inmediato, podemos definir que la colección de **Órdenes** se cargue de forma **Lazy**.
+
+- En **Lazy Loading** carga diferida/perezosa, las entidades relacionadas no se cargan inmediatamente, sino cuando se
+  accede a ellas por primera vez. Esto es útil cuando no siempre necesitamos cargar los datos relacionados, lo que
+  mejora el rendimiento.
+- **Ejemplo:** Si no queremos cargar todas las **Órdenes** asociadas con una **Pizzería** de inmediato, podemos definir
+  que la colección de **Órdenes** se cargue de forma **Lazy**.
 - `OneToMany` y `ManyToMany` tienen, por defecto, la estrategia de **carga diferida**
 
 ```java
+
 @OneToMany(mappedBy = "pizzeria", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
-private List<Order> orders = new ArrayList<>();
+private final List<Order> orders = new ArrayList<>();
 ```
 
 En este caso, las **Órdenes** solo se cargarán cuando llamemos a `pizzeria.getOrders()` por primera vez.
 
 ### Uso de CascadeType
 
-El **CascadeType** en JPA especifica cómo las operaciones realizadas en una entidad se propagan a las entidades relacionadas. Los tipos de **Cascade** más comunes son:
+El **CascadeType** en JPA especifica cómo las operaciones realizadas en una entidad se propagan a las entidades
+relacionadas. Los tipos de **Cascade** más comunes son:
 
-- **CascadeType.ALL**: Propaga todas las operaciones (save, delete, update, etc.) desde la entidad padre a la entidad hija.
+- **CascadeType.ALL**: Propaga todas las operaciones (save, delete, update, etc.) desde la entidad padre a la entidad
+  hija.
 - **CascadeType.PERSIST**: Propaga la operación de guardado.
 - **CascadeType.REMOVE**: Propaga la operación de eliminación.
 
 #### **Ejemplo con CascadeType:**
 
-Si usamos `CascadeType.ALL` en la relación entre **Pizzería** y **localManager**, al guardar una **Pizzería**, automáticamente se guardará su **localManager**. De manera similar, si eliminamos la **Pizzería**, se eliminará también el **localManager**.
+Si usamos `CascadeType.ALL` en la relación entre **Pizzería** y **localManager**, al guardar una **Pizzería**,
+automáticamente se guardará su **localManager**. De manera similar, si eliminamos la **Pizzería**, se eliminará también
+el **localManager**.
 
 ```java
+
 @OneToOne(fetch = FetchType.EAGER, cascade = CascadeType.ALL)
 @JoinColumn(name = "local_manager_id", referencedColumnName = "id")
 private Employee localManager;
@@ -209,9 +251,11 @@ private Employee localManager;
 
 ### Implementación en el CommandLineRunner con Lazy y Eager Loading
 
-Aquí tienes una implementación extendida del `CommandLineRunner` que muestra cómo funcionan **Lazy** y **Eager Loading**, junto con el uso de **CascadeType.ALL** para propagar las operaciones entre entidades.
+Aquí tienes una implementación extendida del `CommandLineRunner` que muestra cómo funcionan **Lazy** y **Eager Loading
+**, junto con el uso de **CascadeType.ALL** para propagar las operaciones entre entidades.
 
 ```java
+
 @Component
 public class PizzeriaDataLoader implements CommandLineRunner {
 
@@ -278,19 +322,28 @@ public class PizzeriaDataLoader implements CommandLineRunner {
 ### Explicación del Código
 
 1. **CascadeType.ALL**:
-    - En la relación `Pizzeria -> Employee`, hemos usado **CascadeType.ALL** para asegurarnos de que las operaciones realizadas sobre la **Pizzería** se propaguen al **localManager**. En este caso, al guardar una pizzería, también guardamos el empleado.
+    - En la relación `Pizzeria -> Employee`, hemos usado **CascadeType.ALL** para asegurarnos de que las operaciones
+      realizadas sobre la **Pizzería** se propaguen al **localManager**. En este caso, al guardar una pizzería, también
+      guardamos el empleado.
 
 2. **Lazy Loading**:
-    - Hemos definido que la relación **Pizzeria -> Orders** sea **Lazy** (`fetch = FetchType.LAZY`). Esto significa que cuando cargamos la **Pizzería**, las **Órdenes** no se cargan hasta que accedemos a ellas explícitamente con `pizzeria.getOrders()`.
+    - Hemos definido que la relación **Pizzeria -> Orders** sea **Lazy** (`fetch = FetchType.LAZY`). Esto significa que
+      cuando cargamos la **Pizzería**, las **Órdenes** no se cargan hasta que accedemos a ellas explícitamente con
+      `pizzeria.getOrders()`.
 
 3. **Eager Loading**:
-    - Por otro lado, la relación **Pizzeria -> Employee** está configurada como **Eager** (`fetch = FetchType.EAGER`), lo que significa que cuando cargamos la **Pizzería**, el **localManager** se carga automáticamente.
+    - Por otro lado, la relación **Pizzeria -> Employee** está configurada como **Eager** (`fetch = FetchType.EAGER`),
+      lo que significa que cuando cargamos la **Pizzería**, el **localManager** se carga automáticamente.
 
 ### Resultado esperado al ejecutar el CommandLineRunner
 
-Cuando se ejecuta este código, primero se carga la **Pizzería**, y su **localManager** se cargará automáticamente debido a **Eager Loading**. Sin embargo, las **Órdenes** no se cargarán hasta que llamemos a `pizzeria.getOrders()`, lo que demostrará el comportamiento de **Lazy Loading**.
+Cuando se ejecuta este código, primero se carga la **Pizzería**, y su **localManager** se cargará automáticamente debido
+a **Eager Loading**. Sin embargo, las **Órdenes** no se cargarán hasta que llamemos a `pizzeria.getOrders()`, lo que
+demostrará el comportamiento de **Lazy Loading**.
 
-El uso de **CascadeType.ALL** asegura que las operaciones de guardar y eliminar en la **Pizzería** se propaguen automáticamente al **localManager** y las **Órdenes**, sin necesidad de gestionar manualmente cada una de las entidades relacionadas.
+El uso de **CascadeType.ALL** asegura que las operaciones de guardar y eliminar en la **Pizzería** se propaguen
+automáticamente al **localManager** y las **Órdenes**, sin necesidad de gestionar manualmente cada una de las entidades
+relacionadas.
 
 ---
 
@@ -304,11 +357,13 @@ El uso de **CascadeType.ALL** asegura que las operaciones de guardar y eliminar 
 
 2. **Crea la entidad `Supplier`:**
     - Representa los proveedores de ingredientes.
-    - Relaciona esta entidad con la entidad `Ingredient` de forma **One-to-Many** y **Many-to-One** (un proveedor tiene varios ingredientes, pero un ingrediente tiene un único proveedor).
+    - Relaciona esta entidad con la entidad `Ingredient` de forma **One-to-Many** y **Many-to-One** (un proveedor tiene
+      varios ingredientes, pero un ingrediente tiene un único proveedor).
 
 3. **Crea la entidad `Delivery`:**
     - Representa las entregas asociadas a las órdenes.
-    - Relaciona esta entidad con la entidad `Order` de forma **One-to-One** (una entrega por orden, y una orden por entrega).
+    - Relaciona esta entidad con la entidad `Order` de forma **One-to-One** (una entrega por orden, y una orden por
+      entrega).
 
 4. **Relaciones a implementar:**
     - **Many-to-Many** entre `Pizza` y `Ingredient`.
@@ -316,7 +371,8 @@ El uso de **CascadeType.ALL** asegura que las operaciones de guardar y eliminar 
     - **One-to-One** entre `Order` y `Delivery`.
 
 5. **Implementa un `CommandLineRunner`:**
-    - Crea una instancia de `Pizzeria` con algunas `Pizzas`, `Orders`, `Ingredients`, `Suppliers` y `Deliveries`, demostrando el uso de todas estas relaciones.
+    - Crea una instancia de `Pizzeria` con algunas `Pizzas`, `Orders`, `Ingredients`, `Suppliers` y `Deliveries`,
+      demostrando el uso de todas estas relaciones.
     - Asegúrate de guardar todas las entidades y probar las relaciones definidas.
 
 #### Requerimientos
